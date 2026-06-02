@@ -1,0 +1,75 @@
+// PINES MOTORES Y ULTRASONIDO
+const int TRIG = 26;
+const int ECHO = 27;
+
+// MOTORES
+const int MOTOR1 = 28;
+const int MOTOR2 = 29;
+
+// CONFIGURACIÓN DE UMBRAL
+const int UMBRAL_CHOQUE = 20;
+
+void setup() {
+  // Configuración de motorese
+  pinMode(MOTOR1, OUTPUT);
+  pinMode(MOTOR2, OUTPUT);
+
+  // Configuración de motores
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+
+  //Puerto Serial para depuración
+  Serial.begin(9600);
+  }
+
+  void loop(){
+  long distancia = medirDistancia();
+    
+    if (distancia > UMBRAL_CHOQUE || distancia == 0) {
+      //Si el camino está despejado avanzar();
+      Serial.println("Moviéndose");
+    }
+
+    else{
+      //Si hay una pared cerca
+    Serial.println("Obstáculo encontrado");
+      detener();
+      delay(500); //Breve pausa girar Derecha
+
+      delay(600); //Busca una nueva dirección
+  }
+
+    delay(50); //Pausa entre lecturas
+  }
+    //Funciones de control
+
+    long medirDistancia() {
+      digitalWrite(TRIG, LOW);
+      delayMicroseconds(2);
+      digitalWrite(TRIG, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIG, LOW);
+
+  //Pulsen devuelve el tiempo en microsegundos
+    long duracion = pulseIn(ECHO, HIGH, 30000); //Descanso de 30ms
+    //Cálculo: Tiempo/Velocidad(s)/2
+    long cm = duracion / 58.2;
+    return cm;
+  }
+
+    void avanzar() {
+      digitalWrite(MOTOR1, HIGH);
+      digitalWrite(MOTOR2, HIGH);
+    }
+
+    void detener() {
+      digitalWrite(MOTOR1, LOW);
+      digitalWrite(MOTOR2, LOW);
+    }
+
+    void girarderecha() {
+      //Para siempre girar con los dos motores
+      //Se detiene un motor y se activa otro
+      digitalWrite(MOTOR1, HIGH);
+      digitalWrite(MOTOR2, LOW);
+    }
