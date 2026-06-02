@@ -1,0 +1,293 @@
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+// DHT11
+#define DHTPIN 2
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// LEDS TEMPERATURA
+int tempR = 3;
+int tempG = 4;
+int tempB = 5;
+
+// LEDS HUMEDAD
+int humR = 6;
+int humG = 7;
+int humB = 8;
+
+// LEDS MQ135
+int mqR = 9;
+int mqG = 10;
+int mqB = 11;
+
+// LEDS LDR
+int ldrR = 12;
+int ldrG = 13;
+int ldrB = 44;
+
+// MQ135
+int mq135 = A0;
+
+// LDR
+int ldr = A1;
+
+float temperatura;
+float humedad;
+
+int calidadAire;
+int nivelLuz;
+
+int riesgoTotal = 0;
+
+int riesgoTemp = 0;
+int riesgoHum = 0;
+int riesgoAire = 0;
+int riesgoLuz = 0;
+
+String estadoTemp;
+String estadoHum;
+String estadoAire;
+String estadoLuz;
+
+String nivelRiesgo = "BAJO";
+String alerta = "NINGUNA";
+
+void setup()
+{
+  Serial.begin(9600);
+  Serial1.begin(115200);
+
+  dht.begin();
+
+  pinMode(tempR, OUTPUT);
+  pinMode(tempG, OUTPUT);
+  pinMode(tempB, OUTPUT);
+
+  pinMode(humR, OUTPUT);
+  pinMode(humG, OUTPUT);
+  pinMode(humB, OUTPUT);
+
+  pinMode(mqR, OUTPUT);
+  pinMode(mqG, OUTPUT);
+  pinMode(mqB, OUTPUT);
+
+  pinMode(ldrR, OUTPUT);
+  pinMode(ldrG, OUTPUT);
+  pinMode(ldrB, OUTPUT);
+}
+
+void loop()
+{
+  riesgoTotal = 0;
+
+  alerta = "NINGUNA";
+
+  temperatura = dht.readTemperature();
+  humedad = dht.readHumidity();
+
+  if (isnan(temperatura) || isnan(humedad))
+  {
+    return;
+  }
+
+  if (temperatura >= 18 && temperatura <= 22)
+  {
+    riesgoTemp = 0;
+    estadoTemp = "SEGURO";
+
+    setRGB(tempR, tempG, tempB, 0, 80, 0);
+  }
+  else if (temperatura >= 23 && temperatura <= 26)
+  {
+    riesgoTemp = 1;
+    estadoTemp = "MODERADO";
+
+    setRGB(tempR, tempG, tempB, 120, 120, 0);
+  }
+  else if (temperatura >= 27 && temperatura <= 30)
+  {
+    riesgoTemp = 2;
+    estadoTemp = "PELIGROSO";
+
+    setRGB(tempR, tempG, tempB, 200, 0, 0);
+  }
+  else
+  {
+    riesgoTemp = 3;
+    estadoTemp = "CRITICO";
+
+    setRGB(tempR, tempG, tempB, 255, 0, 180);
+  }
+
+  riesgoTotal += riesgoTemp;
+
+  if (humedad >= 45 && humedad <= 55)
+  {
+    riesgoHum = 0;
+    estadoHum = "SEGURO";
+
+    setRGB(humR, humG, humB, 0, 80, 0);
+  }
+  else if ((humedad >= 56 && humedad <= 65) ||
+           (humedad >= 35 && humedad <= 44))
+  {
+    riesgoHum = 1;
+    estadoHum = "MODERADO";
+
+    setRGB(humR, humG, humB, 120, 120, 0);
+  }
+  else if ((humedad >= 66 && humedad <= 75) ||
+           (humedad >= 25 && humedad <= 34))
+  {
+    riesgoHum = 2;
+    estadoHum = "PELIGROSO";
+
+    setRGB(humR, humG, humB, 200, 0, 0);
+  }
+  else
+  {
+    riesgoHum = 3;
+    estadoHum = "CRITICO";
+
+    setRGB(humR, humG, humB, 255, 0, 180);
+  }
+
+  riesgoTotal += riesgoHum;
+
+  calidadAire = analogRead(mq135);
+
+  if (calidadAire < 250)
+  {
+    riesgoAire = 0;
+    estadoAire = "SEGURO";
+
+    setRGB(mqR, mqG, mqB, 0, 80, 0);
+  }
+  else if (calidadAire < 500)
+  {
+    riesgoAire = 1;
+    estadoAire = "MODERADO";
+
+    setRGB(mqR, mqG, mqB, 120, 120, 0);
+  }
+  else if (calidadAire < 700)
+  {
+    riesgoAire = 2;
+    estadoAire = "PELIGROSO";
+
+    setRGB(mqR, mqG, mqB, 200, 0, 0);
+  }
+  else
+  {
+    riesgoAire = 3;
+    estadoAire = "CRITICO";
+
+    setRGB(mqR, mqG, mqB, 255, 0, 180);
+  }
+
+  riesgoTotal += riesgoAire;
+
+  nivelLuz = analogRead(ldr);
+
+  if (nivelLuz < 150)
+  {
+    riesgoLuz = 0;
+    estadoLuz = "SEGURO";
+
+    setRGB(ldrR, ldrG, ldrB, 0, 80, 0);
+  }
+  else if (nivelLuz < 300)
+  {
+    riesgoLuz = 1;
+    estadoLuz = "MODERADO";
+
+    setRGB(ldrR, ldrG, ldrB, 120, 120, 0);
+  }
+  else if (nivelLuz < 600)
+  {
+    riesgoLuz = 2;
+    estadoLuz = "PELIGROSO";
+
+    setRGB(ldrR, ldrG, ldrB, 200, 0, 0);
+  }
+  else
+  {
+    riesgoLuz = 3;
+    estadoLuz = "CRITICO";
+
+    setRGB(ldrR, ldrG, ldrB, 255, 0, 180);
+  }
+
+  riesgoTotal += riesgoLuz;
+
+  if (temperatura > 30 && humedad > 70)
+  {
+    riesgoTotal += 3;
+    alerta = "HONGOS_Y_DEFORMACION";
+  }
+
+  if (nivelLuz > 600 && temperatura > 28)
+  {
+    riesgoTotal += 2;
+    alerta = "DECOLORACION_ACELERADA";
+  }
+
+  if (humedad < 30 && temperatura > 28)
+  {
+    riesgoTotal += 2;
+    alerta = "RESEQUEDAD_Y_GRIETAS";
+  }
+
+  if (calidadAire > 700 && humedad > 70)
+  {
+    riesgoTotal += 3;
+    alerta = "CORROSION_Y_DEGRADACION";
+  }
+
+  if (humedad > 70 && nivelLuz > 600)
+  {
+    riesgoTotal += 2;
+    alerta = "HONGOS_Y_MANCHAS";
+  }
+
+  if (riesgoTotal <= 2)
+  {
+    nivelRiesgo = "BAJO";
+  }
+  else if (riesgoTotal <= 5)
+  {
+    nivelRiesgo = "MEDIO";
+  }
+  else if (riesgoTotal <= 8)
+  {
+    nivelRiesgo = "ALTO";
+  }
+  else
+  {
+    nivelRiesgo = "CRITICO";
+  }
+
+  String paquete =
+    "TEMP:" + String(temperatura) +
+    ",HUM:" + String(humedad) +
+    ",AIRE:" + String(calidadAire) +
+    ",LUZ:" + String(nivelLuz) +
+    ",RIESGO:" + String(riesgoTotal) +
+    ",NIVEL:" + nivelRiesgo +
+    ",ALERTA:" + alerta;
+
+  Serial.println(paquete);
+  Serial1.println(paquete);
+
+  delay(2000);
+}
+
+void setRGB(int rPin, int gPin, int bPin,
+            int r, int g, int b)
+{
+  analogWrite(rPin, r);
+  analogWrite(gPin, g);
+  analogWrite(bPin, b);
+}
