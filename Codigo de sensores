@@ -76,6 +76,14 @@ void setup()
   pinMode(ldrR, OUTPUT);
   pinMode(ldrG, OUTPUT);
   pinMode(ldrB, OUTPUT);
+
+  // Prueba de LEDs al arrancar
+  setRGB(tempR, tempG, tempB, 255, 0, 0);
+  setRGB(humR, humG, humB, 0, 255, 0);
+  setRGB(mqR, mqG, mqB, 0, 0, 255);
+  setRGB(ldrR, ldrG, ldrB, 255, 255, 255);
+
+  delay(3000);
 }
 
 void loop()
@@ -89,7 +97,9 @@ void loop()
 
   if (isnan(temperatura) || isnan(humedad))
   {
-    return;
+    Serial.println("ERROR DHT11");
+    temperatura = 25;
+    humedad = 50;
   }
 
   if (temperatura >= 18 && temperatura <= 22)
@@ -97,28 +107,28 @@ void loop()
     riesgoTemp = 0;
     estadoTemp = "SEGURO";
 
-    setRGB(tempR, tempG, tempB, 0, 80, 0);
+    setRGB(tempR, tempG, tempB, 0, 255, 0);
   }
   else if (temperatura >= 23 && temperatura <= 26)
   {
     riesgoTemp = 1;
     estadoTemp = "MODERADO";
 
-    setRGB(tempR, tempG, tempB, 120, 120, 0);
+    setRGB(tempR, tempG, tempB, 255, 255, 0);
   }
   else if (temperatura >= 27 && temperatura <= 30)
   {
     riesgoTemp = 2;
     estadoTemp = "PELIGROSO";
 
-    setRGB(tempR, tempG, tempB, 200, 0, 0);
+    setRGB(tempR, tempG, tempB, 255, 0, 0);
   }
   else
   {
     riesgoTemp = 3;
     estadoTemp = "CRITICO";
 
-    setRGB(tempR, tempG, tempB, 255, 0, 180);
+    setRGB(tempR, tempG, tempB, 255, 0, 255);
   }
 
   riesgoTotal += riesgoTemp;
@@ -128,7 +138,7 @@ void loop()
     riesgoHum = 0;
     estadoHum = "SEGURO";
 
-    setRGB(humR, humG, humB, 0, 80, 0);
+    setRGB(humR, humG, humB, 0, 255, 0);
   }
   else if ((humedad >= 56 && humedad <= 65) ||
            (humedad >= 35 && humedad <= 44))
@@ -136,7 +146,7 @@ void loop()
     riesgoHum = 1;
     estadoHum = "MODERADO";
 
-    setRGB(humR, humG, humB, 120, 120, 0);
+    setRGB(humR, humG, humB, 255, 255, 0);
   }
   else if ((humedad >= 66 && humedad <= 75) ||
            (humedad >= 25 && humedad <= 34))
@@ -144,14 +154,14 @@ void loop()
     riesgoHum = 2;
     estadoHum = "PELIGROSO";
 
-    setRGB(humR, humG, humB, 200, 0, 0);
+    setRGB(humR, humG, humB, 255, 0, 0);
   }
   else
   {
     riesgoHum = 3;
     estadoHum = "CRITICO";
 
-    setRGB(humR, humG, humB, 255, 0, 180);
+    setRGB(humR, humG, humB, 255, 0, 255);
   }
 
   riesgoTotal += riesgoHum;
@@ -163,28 +173,28 @@ void loop()
     riesgoAire = 0;
     estadoAire = "SEGURO";
 
-    setRGB(mqR, mqG, mqB, 0, 80, 0);
+    setRGB(mqR, mqG, mqB, 0, 255, 0);
   }
   else if (calidadAire < 500)
   {
     riesgoAire = 1;
     estadoAire = "MODERADO";
 
-    setRGB(mqR, mqG, mqB, 120, 120, 0);
+    setRGB(mqR, mqG, mqB, 255, 255, 0);
   }
   else if (calidadAire < 700)
   {
     riesgoAire = 2;
     estadoAire = "PELIGROSO";
 
-    setRGB(mqR, mqG, mqB, 200, 0, 0);
+    setRGB(mqR, mqG, mqB, 255, 0, 0);
   }
   else
   {
     riesgoAire = 3;
     estadoAire = "CRITICO";
 
-    setRGB(mqR, mqG, mqB, 255, 0, 180);
+    setRGB(mqR, mqG, mqB, 255, 0, 255);
   }
 
   riesgoTotal += riesgoAire;
@@ -196,28 +206,28 @@ void loop()
     riesgoLuz = 0;
     estadoLuz = "SEGURO";
 
-    setRGB(ldrR, ldrG, ldrB, 0, 80, 0);
+    setRGB(ldrR, ldrG, ldrB, 0, 255, 0);
   }
   else if (nivelLuz < 300)
   {
     riesgoLuz = 1;
     estadoLuz = "MODERADO";
 
-    setRGB(ldrR, ldrG, ldrB, 120, 120, 0);
+    setRGB(ldrR, ldrG, ldrB, 255, 255, 0);
   }
   else if (nivelLuz < 600)
   {
     riesgoLuz = 2;
     estadoLuz = "PELIGROSO";
 
-    setRGB(ldrR, ldrG, ldrB, 200, 0, 0);
+    setRGB(ldrR, ldrG, ldrB, 255, 0, 0);
   }
   else
   {
     riesgoLuz = 3;
     estadoLuz = "CRITICO";
 
-    setRGB(ldrR, ldrG, ldrB, 255, 0, 180);
+    setRGB(ldrR, ldrG, ldrB, 255, 0, 255);
   }
 
   riesgoTotal += riesgoLuz;
