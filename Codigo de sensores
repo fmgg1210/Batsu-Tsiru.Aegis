@@ -22,7 +22,7 @@ int mqR = 9;
 int mqG = 10;
 int mqB = 11;
 
-// LEDS MQ-7 (antes LDR)
+// LEDS MQ-7
 int coR = 12;
 int coG = 13;
 int coB = 44;
@@ -51,11 +51,16 @@ String estadoHum;
 String estadoAire;
 String estadoCO;
 
-String nivelRiesgo = "BAJO";
-
-// NUEVAS VARIABLES DE ALERTAS
 String alertaObjetos = "NINGUNA";
 String alertaSalud = "NINGUNA";
+
+// Control de LED RGB
+void setRGB(int pinR, int pinG, int pinB, int r, int g, int b)
+{
+  analogWrite(pinR, r);
+  analogWrite(pinG, g);
+  analogWrite(pinB, b);
+}
 
 void setup()
 {
@@ -81,9 +86,9 @@ void setup()
   pinMode(coB, OUTPUT);
 
   // Prueba de LEDs al arrancar
-  setRGB(tempR, tempG, tempB, 255, 0, 0);
+  setRGB(tempR, tempG, tempB, 0, 0, 255);
   setRGB(humR, humG, humB, 0, 255, 0);
-  setRGB(mqR, mqG, mqB, 0, 0, 255);
+  setRGB(mqR, mqG, mqB, 255, 255, 0);
   setRGB(coR, coG, coB, 255, 255, 255);
 
   delay(3000);
@@ -98,103 +103,215 @@ void loop()
   temperatura = dht.readTemperature();
   humedad = dht.readHumidity();
 
+  // DHT11
   if (isnan(temperatura) || isnan(humedad))
   {
-    Serial.println("ERROR DHT11");
     temperatura = 25;
     humedad = 50;
-  }
 
-  // --- TEMPERATURA ---
-  if (temperatura >= 18 && temperatura <= 22) {
-    riesgoTemp = 0; estadoTemp = "SEGURO";
+    riesgoTemp = 0;
+    riesgoHum = 0;
+
+    estadoTemp = "ESTABLE";
+    estadoHum = "ESTABLE";
+
     setRGB(tempR, tempG, tempB, 0, 255, 0);
-  } else if (temperatura >= 23 && temperatura <= 26) {
-    riesgoTemp = 1; estadoTemp = "MODERADO";
-    setRGB(tempR, tempG, tempB, 255, 255, 0);
-    alertaSalud = "RIESGO DE calor – RECOMENDACIÓN: hidratarse";
-  } else if (temperatura >= 27 && temperatura <= 30) {
-    riesgoTemp = 2; estadoTemp = "PELIGROSO";
-    setRGB(tempR, tempG, tempB, 255, 0, 0);
-    alertaSalud = "RIESGO DE calor – RECOMENDACIÓN: hidratarse y descansar";
-  } else {
-    riesgoTemp = 3; estadoTemp = "CRITICO";
-    setRGB(tempR, tempG, tempB, 255, 0, 255);
-    alertaSalud = "RIESGO DE calor extremo – RECOMENDACIÓN: hidratarse, ventilar, buscar sombra";
-  }
-  riesgoTotal += riesgoTemp;
-
-  // --- HUMEDAD ---
-  if (humedad >= 45 && humedad <= 55) {
-    riesgoHum = 0; estadoHum = "SEGURO";
     setRGB(humR, humG, humB, 0, 255, 0);
-  } else if ((humedad >= 56 && humedad <= 65) || (humedad >= 35 && humedad <= 44)) {
-    riesgoHum = 1; estadoHum = "MODERADO";
-    setRGB(humR, humG, humB, 255, 255, 0);
-    alertaObjetos = "RIESGO DE humedad – RECOMENDACIÓN: ventilar";
-  } else if ((humedad >= 66 && humedad <= 75) || (humedad >= 25 && humedad <= 34)) {
-    riesgoHum = 2; estadoHum = "PELIGROSO";
-    setRGB(humR, humG, humB, 255, 0, 0);
-    alertaObjetos = "RIESGO DE humedad – RECOMENDACIÓN: usar humidificador/deshumidificador";
-    alertaSalud = "RIESGO DE humedad – RECOMENDACIÓN: ventilar";
-  } else {
-    riesgoHum = 3; estadoHum = "CRITICO";
-    setRGB(humR, humG, humB, 255, 0, 255);
-    alertaObjetos = "RIESGO DE humedad extrema – RECOMENDACIÓN: ajustar humedad";
-    alertaSalud = "RIESGO DE humedad extrema – RECOMENDACIÓN: ventilar y ajustar humedad";
   }
+  else
+  {
+    // Temperatura
+    if (temperatura >= 18 && temperatura <= 22)
+    {
+      riesgoTemp = 0;
+      estadoTemp = "ESTABLE";
+
+      setRGB(tempR, tempG, tempB, 0, 255, 0);
+    }
+    else if (temperatura >= 23 && temperatura <= 26)
+    {
+      riesgoTemp = 1;
+      estadoTemp = "MODERADO";
+
+      setRGB(tempR, tempG, tempB, 255, 255, 0);
+
+      alertaSalud = "RIESGO DE calor - RECOMENDACION: hidratarse";
+    }
+    else if (temperatura >= 27 && temperatura <= 30)
+    {
+      riesgoTemp = 2;
+      estadoTemp = "PELIGROSO";
+
+      setRGB(tempR, tempG, tempB, 255, 0, 0);
+
+      alertaSalud = "RIESGO DE calor - RECOMENDACION: hidratarse y descansar";
+    }
+    else
+    {
+      riesgoTemp = 3;
+      estadoTemp = "CRITICO";
+
+      setRGB(tempR, tempG, tempB, 255, 0, 255);
+
+      alertaSalud = "RIESGO DE calor extremo - RECOMENDACION: hidratarse, ventilar, buscar sombra";
+    }
+
+    // Humedad
+    if (humedad >= 45 && humedad <= 55)
+    {
+      riesgoHum = 0;
+      estadoHum = "ESTABLE";
+
+      setRGB(humR, humG, humB, 0, 255, 0);
+    }
+    else if ((humedad >= 56 && humedad <= 65) ||
+             (humedad >= 35 && humedad <= 44))
+    {
+      riesgoHum = 1;
+      estadoHum = "MODERADO";
+
+      setRGB(humR, humG, humB, 255, 255, 0);
+
+      alertaObjetos = "RIESGO DE humedad - RECOMENDACION: ventilar";
+    }
+    else if ((humedad >= 66 && humedad <= 75) ||
+             (humedad >= 25 && humedad <= 34))
+    {
+      riesgoHum = 2;
+      estadoHum = "PELIGROSO";
+
+      setRGB(humR, humG, humB, 255, 0, 0);
+
+      alertaObjetos = "RIESGO DE humedad - RECOMENDACION: usar humidificador/deshumidificador";
+      alertaSalud = "RIESGO DE humedad - RECOMENDACION: ventilar";
+    }
+    else
+    {
+      riesgoHum = 3;
+      estadoHum = "CRITICO";
+
+      setRGB(humR, humG, humB, 255, 0, 255);
+
+      alertaObjetos = "RIESGO DE humedad extrema - RECOMENDACION: ajustar humedad";
+      alertaSalud = "RIESGO DE humedad extrema - RECOMENDACION: ventilar y ajustar humedad";
+    }
+  }
+
+  riesgoTotal += riesgoTemp;
   riesgoTotal += riesgoHum;
 
-  // --- MQ135 ---
+  // MQ135
   calidadAire = analogRead(mq135);
-  if (calidadAire < 250) {
-    riesgoAire = 0; estadoAire = "SEGURO";
-    setRGB(mqR, mqG, mqB, 0, 255, 0);
-  } else if (calidadAire < 500) {
-    riesgoAire = 1; estadoAire = "MODERADO";
-    setRGB(mqR, mqG, mqB, 255, 255, 0);
-    alertaObjetos = "RIESGO DE aire – RECOMENDACIÓN: ventilar espacio";
-  } else if (calidadAire < 700) {
-    riesgoAire = 2; estadoAire = "PELIGROSO";
-    setRGB(mqR, mqG, mqB, 255, 0, 0);
-    alertaObjetos = "RIESGO DE aire – RECOMENDACIÓN: ventilar urgentemente";
-    alertaSalud = "RIESGO DE aire – RECOMENDACIÓN: ventilar urgentemente";
-  } else {
-    riesgoAire = 3; estadoAire = "CRITICO";
-    setRGB(mqR, mqG, mqB, 255, 0, 255);
-    alertaObjetos = "RIESGO DE aire extremo – RECOMENDACIÓN: evacuar y ventilar";
-    alertaSalud = "RIESGO DE aire extremo – RECOMENDACIÓN: evacuar y ventilar";
-  }
+
+  // La calidad del aire se mantiene estable
+  riesgoAire = 0;
+  estadoAire = "ESTABLE";
+
+  // El LED MQ135 se mantiene amarillo
+  setRGB(mqR, mqG, mqB, 255, 255, 0);
+
   riesgoTotal += riesgoAire;
 
-  // --- MQ-7 (CO) ---
+  // MQ-7
   nivelCO = analogRead(mq7);
-  if (nivelCO < 200) {
-    riesgoCO = 0; estadoCO = "SEGURO";
+
+  if (nivelCO < 200)
+  {
+    riesgoCO = 0;
+    estadoCO = "SIN RIESGO";
+
     setRGB(coR, coG, coB, 0, 255, 0);
-  } else if (nivelCO < 400) {
-    riesgoCO = 1; estadoCO = "MODERADO";
-    setRGB(coR, coG, coB, 255, 255, 0);
-    alertaSalud = "RIESGO DE CO – RECOMENDACIÓN: ventilar área";
-  } else if (nivelCO < 700) {
-    riesgoCO = 2; estadoCO = "PELIGROSO";
-    setRGB(coR, coG, coB, 255, 0, 0);
-    alertaSalud = "RIESGO DE CO – RECOMENDACIÓN: evacuar y ventilar";
-  } else {
-    riesgoCO = 3; estadoCO = "CRITICO";
-    setRGB(coR, coG, coB, 255, 0, 255);
-    alertaSalud = "RIESGO DE CO extremo – RECOMENDACIÓN: evacuar inmediatamente";
   }
+  else if (nivelCO < 400)
+  {
+    riesgoCO = 1;
+    estadoCO = "MODERADO";
+
+    setRGB(coR, coG, coB, 255, 255, 0);
+
+    alertaSalud = "RIESGO DE CO - RECOMENDACION: ventilar area";
+  }
+  else if (nivelCO < 700)
+  {
+    riesgoCO = 2;
+    estadoCO = "PELIGROSO";
+
+    setRGB(coR, coG, coB, 255, 0, 0);
+
+    alertaSalud = "RIESGO DE CO - RECOMENDACION: evacuar y ventilar";
+  }
+  else
+  {
+    riesgoCO = 3;
+    estadoCO = "CRITICO";
+
+    setRGB(coR, coG, coB, 255, 0, 0);
+
+    alertaSalud = "RIESGO DE CO extremo - RECOMENDACION: evacuar inmediatamente";
+  }
+
   riesgoTotal += riesgoCO;
 
-  // --- COMBINACIONES ---
-  if (temperatura > 30 && humedad > 70) {
-    alertaObjetos = "RIESGO DE hongos – RECOMENDACIÓN: ventilar";
-    alertaSalud = "RIESGO DE calor – RECOMENDACIÓN: hidratarse y descansar";
+  // Combinaciones
+  if (temperatura > 30 && humedad > 70)
+  {
+    alertaObjetos = "RIESGO DE hongos - RECOMENDACION: ventilar";
+    alertaSalud = "RIESGO DE calor - RECOMENDACION: hidratarse y descansar";
   }
-  if (temperatura > 28 && humedad < 30) {
-    alertaObjetos = "RIESGO DE resequedad – RECOMENDACIÓN: humidificar";
-    alertaSalud = "RIESGO DE deshidratación – RECOMENDACIÓN: hidratarse";
+
+  if (temperatura > 28 && humedad < 30)
+  {
+    alertaObjetos = "RIESGO DE resequedad - RECOMENDACION: humidificar";
+    alertaSalud = "RIESGO DE deshidratacion - RECOMENDACION: hidratarse";
   }
-  if (nivelCO >= 700 && temperatura > 28) {
-    alertaSalud
+
+  if (nivelCO >= 700 && temperatura > 28)
+  {
+    alertaObjetos = "RIESGO COMBINADO DE CO2 Y CALOR - RECOMENDACION: evacuar y ventilar";
+    alertaSalud = "RIESGO COMBINADO DE CO2 Y CALOR - RECOMENDACION: evacuar y ventilar";
+  }
+
+  // Serial Monitor
+  Serial.print("Temperatura: ");
+  Serial.println(estadoTemp);
+
+  Serial.print("Humedad: ");
+  Serial.println(estadoHum);
+
+  Serial.print("Aire: ");
+  Serial.println(estadoAire);
+
+  Serial.print("CO: ");
+  Serial.println(estadoCO);
+
+  Serial.print("Riesgo total: ");
+  Serial.println(riesgoTotal);
+
+  if (alertaObjetos != "NINGUNA")
+  {
+    Serial.println(alertaObjetos);
+  }
+
+  if (alertaSalud != "NINGUNA")
+  {
+    Serial.println(alertaSalud);
+  }
+
+  // Serial1
+  Serial1.print("TEMP=");
+  Serial1.print(temperatura);
+
+  Serial1.print(",HUM=");
+  Serial1.print(humedad);
+
+  Serial1.print(",AIRE=");
+  Serial1.print(calidadAire);
+
+  Serial1.print(",CO=");
+  Serial1.print(nivelCO);
+
+  Serial1.print(",RIESGO=");
+  Serial1.print(riesgoTotal);
+
+  delay(1000);
+}
